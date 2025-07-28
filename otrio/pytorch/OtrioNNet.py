@@ -44,4 +44,4 @@ class OtrioNNet(nn.Module):
 
         pi = self.fc3(s)          # (batch, 27)
         v  = torch.tanh(self.fc4(s))  # (batch, 1)
-        return F.log_softmax(pi, dim=1), torch.tanh(v)
+        return F.log_softmax(pi, dim=1), v
