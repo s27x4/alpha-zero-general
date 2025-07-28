@@ -1,4 +1,7 @@
 import logging
+import os
+import subprocess
+from datetime import datetime
 
 import coloredlogs
 
@@ -52,6 +55,21 @@ args = dotdict({
 
 
 def main():
+    # --- ログディレクトリの作成と TensorBoard 起動 ---
+    base_log_dir = args.tb_log_dir
+    timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
+    log_dir = os.path.join(base_log_dir, timestamp)
+    os.makedirs(log_dir, exist_ok=True)
+    args.tb_log_dir = log_dir
+
+    try:
+        subprocess.Popen([
+            'tensorboard',
+            '--logdir', log_dir,
+        ])
+    except FileNotFoundError:
+        log.warning('tensorboard コマンドが見つかりませんでした')
+
     log.info('Loading %s...', Game.__name__)
     g = Game()
 
