@@ -1,4 +1,4 @@
-name: otrio
+name: otrioai
 channels:
   - defaults
 dependencies:
