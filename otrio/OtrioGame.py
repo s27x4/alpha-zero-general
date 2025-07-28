@@ -73,7 +73,9 @@ class OtrioGame(Game):
         size, rem = divmod(action, 9)
         row, col = divmod(rem, 3)
 
-        idx = 0 if player == 1 else 1
+        idx = 0 if self.n_players == 2 and player == 1 else (
+            1 if self.n_players == 2 else player - 1
+        )
         colors = self.player_colors[idx]
         c_idx = self.next_color[idx] if self.n_players == 2 else 0
         color = colors[c_idx]
@@ -98,7 +100,9 @@ class OtrioGame(Game):
         Returns:
             mask (np.ndarray[int8]): shape (27,), 1 = legal
         """
-        idx = 0 if player == 1 else 1
+        idx = 0 if self.n_players == 2 and player == 1 else (
+            1 if self.n_players == 2 else player - 1
+        )
         colors = self.player_colors[idx]
         c_idx = self.next_color[idx] if self.n_players == 2 else 0
         color = colors[c_idx]
