@@ -89,10 +89,10 @@ class NNetWrapper:
         self.nnet.eval()
         with torch.no_grad():
             pi, v = self.nnet(board)
-            pi = pi.exp()                 # ← log_softmax を想定
-            pi = pi / pi.sum() 
+            pi = torch.exp(pi)  # 一度だけ指数を計算
+            pi = pi / pi.sum()
         # print('PREDICTION TIME TAKEN : {0:03f}'.format(time.time()-start))
-        return torch.exp(pi).data.cpu().numpy()[0], v.data.cpu().numpy()[0]
+        return pi.data.cpu().numpy()[0], v.data.cpu().numpy()[0]
 
     def loss_pi(self, targets, outputs):
         return -torch.sum(targets * outputs) / targets.size()[0]
