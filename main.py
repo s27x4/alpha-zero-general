@@ -12,37 +12,42 @@ log = logging.getLogger(__name__)
 coloredlogs.install(level='INFO')  # Change this to DEBUG to see more info.
 
 args = dotdict({
-    # ── 学習サイクル ─────────────────────────
+    # ─── 学習サイクル ─────────────────────
     'numIters': 1000,
-    'numEps': 100,
-    'tempThreshold': 15,
-    'updateThreshold': 0.6,
-    'maxlenOfQueue': 200_000,
-    'numMCTSSims': 25,
-    'arenaCompare': 40,
-    'cpuct': 1,
+    'numEps': 200,          # self‑playゲーム数 ↑
+    'tempThreshold': 25,
+    'updateThreshold': 0.55,
+    'maxlenOfQueue': 300_000,
+    'numMCTSSims': 160,     # 探索 4‑6倍
+    'arenaCompare': 100,    # 評価試合 ↑
+    'cpuct': 1.5,
 
-    # ── Otrio 盤設定 ────────────────────────
+    # ─── 盤設定 ─────────────────────────
     'board_x': 3,
     'board_y': 3,
     'action_size': 27,
 
-    # ── ネットワーク＆最適化 ────────────────
-    'num_channels': 128,   # ★ ← 追加（64〜512 でお好み）
+    # ─── ネット＆最適化 ────────────────
+    'num_channels': 256,
     'dropout': 0.3,
-    'lr': 0.001,
-    'batch_size': 64,
-    'epochs': 10,
+    'lr': 0.002,            # 初期 LR
+    'batch_size': 128,
+    'epochs': 5,
 
-    # TensorBoard ログ出力先
-    'tb_log_dir': 'logs/otrio-ai',
+    # ─── スケジューラ設定（追記） ───────
+    'lr_scheduler': 'cosine',   # wrap して使う
+    'lr_min': 1e-4,
 
-    # ── I/O ────────────────────────────────
+    # ─── TensorBoard ───────────────────
+    'tb_log_dir': 'logs/otrio-v2',
+
+    # ─── I/O ───────────────────────────
     'checkpoint': './temp/',
-    'load_model': True,
-    'load_folder_file': ('temp', 'best.pth.tar'),
-    'numItersForTrainExamplesHistory': 20,
+    'load_model': False,
+    'load_folder_file': ('o-trio-v2/temp', 'best.pth.tar'),
+    'numItersForTrainExamplesHistory': 40,
 })
+
 
 
 
