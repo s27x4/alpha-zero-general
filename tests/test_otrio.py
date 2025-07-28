@@ -43,7 +43,8 @@ def test_get_game_ended_tower_win():
 
 def test_get_game_ended_draw():
     game = OtrioGame()
-    board = np.array([
+    board = game.getInitBoard()
+    board[:3] = np.array([
         [[1, -1, 1],
          [1, -1, -1],
          [-1, 1, -1]],

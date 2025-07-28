@@ -9,7 +9,7 @@ class OtrioNNet(nn.Module):
         self.c, self.board_x, self.board_y = game.getBoardSize()
         self.action_size = game.getActionSize()
 
-        # ▼ 入力チャネル数を 3 に
+        # 入力チャネル数はゲーム側のボードサイズに合わせる
         self.conv1 = nn.Conv2d(self.c, self.args.num_channels, 3, padding=1)
         self.conv2 = nn.Conv2d(self.args.num_channels, self.args.num_channels, 3, padding=1)
         self.conv3 = nn.Conv2d(self.args.num_channels, self.args.num_channels, 3, padding=1)
@@ -31,7 +31,7 @@ class OtrioNNet(nn.Module):
         self.fc4 = nn.Linear(512, 1)
 
     def forward(self, s):
-        # s shape: (batch, 3, 3, 3) → (batch, 3, 3, 3)
+        # s shape: (batch, c, 3, 3)
         s = F.relu(self.bn1(self.conv1(s)))
         s = F.relu(self.bn2(self.conv2(s)))
         s = F.relu(self.bn3(self.conv3(s)))
