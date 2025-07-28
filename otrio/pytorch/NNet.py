@@ -12,7 +12,7 @@ from NeuralNet import NeuralNet
 import torch
 import torch.optim as optim
 from .OtrioNNet import OtrioNNet
-
+from torch.utils.tensorboard import SummaryWriter
 class NNetWrapper:
     def __init__(self, game, args):
         from utils import dotdict      # 元のユーティリティ再利用
@@ -25,6 +25,7 @@ class NNetWrapper:
         self.nnet = OtrioNNet(game, self.args)
         if self.args.cuda:
             self.nnet.cuda()
+        self.writer = SummaryWriter(log_dir='logs/otrio-ai')  # 好きなパス名でOK
 
     # train/predict/save/load は元の Wrapper をコピペ or インポート
     def train(self, examples):
@@ -32,7 +33,7 @@ class NNetWrapper:
         examples: list of examples, each example is of form (board, pi, v)
         """
         optimizer = optim.Adam(self.nnet.parameters())
-
+        global_step = 0
         for epoch in range(self.args.epochs):
             print('EPOCH ::: ' + str(epoch + 1))
             self.nnet.train()
@@ -68,6 +69,11 @@ class NNetWrapper:
                 optimizer.zero_grad()
                 total_loss.backward()
                 optimizer.step()
+                self.writer.add_scalar('loss/total', total_loss.item(), global_step)
+                self.writer.add_scalar('loss/policy', l_pi.item(), global_step)
+                self.writer.add_scalar('loss/value',  l_v.item(), global_step)
+                global_step += 1
+        self.writer.flush()
 
     def predict(self, board):
         """
@@ -104,6 +110,8 @@ class NNetWrapper:
         torch.save({
             'state_dict': self.nnet.state_dict(),
         }, filepath)
+        with open(f"{filepath}.examples", "wb") as f:
+            pickle.dump(self.examplesBuffer, f)
 
     def load_checkpoint(self, folder='checkpoint', filename='checkpoint.pth.tar'):
         # https://github.com/pytorch/examples/blob/master/imagenet/main.py#L98
