@@ -6,7 +6,8 @@ class OtrioNNet(nn.Module):
     def __init__(self, game, args):
         super().__init__()
         self.args = args
-        self.c, self.board_x, self.board_y = game.getBoardSize()
+        self.colors, self.sizes, self.board_x, self.board_y = game.getBoardSize()
+        self.c = self.colors * self.sizes
         self.action_size = game.getActionSize()
 
         # 入力チャネル数はゲーム側のボードサイズに合わせる
@@ -31,7 +32,8 @@ class OtrioNNet(nn.Module):
         self.fc4 = nn.Linear(512, 1)
 
     def forward(self, s):
-        # s shape: (batch, c, 3, 3)
+        # s shape: (batch, colors, sizes, board_x, board_y)
+        s = s.view(-1, self.c, self.board_x, self.board_y)
         s = F.relu(self.bn1(self.conv1(s)))
         s = F.relu(self.bn2(self.conv2(s)))
         s = F.relu(self.bn3(self.conv3(s)))

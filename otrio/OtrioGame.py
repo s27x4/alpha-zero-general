@@ -24,25 +24,26 @@ class OtrioGame(Game):
     SIZES = 3
     N = 3  # board is 3×3 pegs
     PIECES_PER_SIZE = 3
+    COLORS = 2
 
     def __init__(self, n_players: int = 2):
         self.n_players = n_players
         self.action_size = self.SIZES * self.N * self.N  # 27
+        self.next_color = np.zeros(n_players, np.int8)
+        self.reserves = np.full((n_players, self.COLORS, self.SIZES),
+                                self.PIECES_PER_SIZE, np.int8)
 
     # ══════════════ Alpha‑Zero required API ══════════════
     def getInitBoard(self):
-        """Zero‑filled board with piece reserves."""
-        channels = self.SIZES + self.n_players * self.SIZES
-        board = np.zeros((channels, self.N, self.N), dtype=np.int8)
-        for p in range(self.n_players):
-            offset = self.SIZES + p * self.SIZES
-            for s in range(self.SIZES):
-                board[offset + s, :, :] = self.PIECES_PER_SIZE
+        """Zero‑filled board and reset reserves/color states."""
+        board = np.zeros((self.COLORS, self.SIZES, self.N, self.N),
+                         dtype=np.int8)
+        self.next_color[:] = 0
+        self.reserves[:] = self.PIECES_PER_SIZE
         return board
 
     def getBoardSize(self):
-        channels = self.SIZES + self.n_players * self.SIZES
-        return (channels, self.N, self.N)
+        return (self.COLORS, self.SIZES, self.N, self.N)
 
     def getActionSize(self):
         return self.action_size
@@ -60,17 +61,12 @@ class OtrioGame(Game):
         b = board.copy()
         size, rem = divmod(action, 9)
         row, col = divmod(rem, 3)
-        assert b[size, row, col] == 0, "Illegal move!"
-
-        if player == 1:
-            offset = self.SIZES
-        else:
-            offset = self.SIZES * 2
-        reserve_layer = offset + size
-        assert b[reserve_layer, 0, 0] > 0, "No pieces left!"
-        b[reserve_layer, :, :] -= 1
-
-        b[size, row, col] = player
+        c = self.next_color[player - 1]
+        assert b[c, size, row, col] == 0, "Illegal move!"
+        assert self.reserves[player - 1, c, size] > 0, "No pieces left!"
+        b[c, size, row, col] = player
+        self.reserves[player - 1, c, size] -= 1
+        self.next_color[player - 1] ^= 1
 
         if self.n_players == 2:
             next_player = -player
@@ -84,51 +80,43 @@ class OtrioGame(Game):
         Returns:
             mask (np.ndarray[int8]): shape (27,), 1 = legal
         """
-        mask = (board[:self.SIZES].reshape(-1) == 0).astype(np.int8)
-
-        # 各サイズの残り駒が０ならそのレイヤすべて無効
-        if player == 1:
-            offset = self.SIZES
-        else:
-            offset = self.SIZES * 2
+        c = self.next_color[player - 1]
+        mask = np.zeros(self.action_size, np.int8)
         for size in range(self.SIZES):
-            remaining = board[offset + size, 0, 0]
-            if remaining == 0:
-                mask[size*9:(size+1)*9] = 0
+            if self.reserves[player - 1, c, size] == 0:
+                continue
+            plane = board[c, size]
+            mask[size*9:(size+1)*9] = (plane.reshape(-1) == 0)
 
         return mask
 
     def getGameEnded(self, board: np.ndarray, player: int):
         """0 = ongoing, 1 = win for *player*, -1 = loss, 1e‑4 = draw."""
         def _has_line(p):
-            for size in range(self.SIZES):
-                plane = board[size] == p
-                if np.any(np.all(plane, axis=0)):
-                    return True  # column
-                if np.any(np.all(plane, axis=1)):
-                    return True  # row
-                if np.all(np.diag(plane)) or np.all(np.diag(np.fliplr(plane))):
-                    return True  # diagonal
-            # tower win
-            if np.any(np.all(board[:self.SIZES] == p, axis=0)):
-                return True
+            for c in range(self.COLORS):
+                for size in range(self.SIZES):
+                    plane = board[c, size] == p
+                    if np.any(np.all(plane, axis=0)):
+                        return True  # column
+                    if np.any(np.all(plane, axis=1)):
+                        return True  # row
+                    if np.all(np.diag(plane)) or np.all(np.diag(np.fliplr(plane))):
+                        return True  # diagonal
+                if np.any(np.all(board[c] == p, axis=0)):
+                    return True  # tower
             return False
 
         if _has_line(player):
             return 1
         if _has_line(-player):
             return -1
-        if not (board[:self.SIZES] == 0).any():
+        if not (board == 0).any():
             return 1e-4  # draw
         return 0
 
     def getCanonicalForm(self, board: np.ndarray, player: int):
         b = board.copy()
-        b[:self.SIZES] *= player
-        if player == -1:
-            start = self.SIZES
-            mid = self.SIZES * 2
-            b[start:mid], b[mid:] = b[mid:].copy(), b[start:mid].copy()
+        b *= player
         return b
 
     def getSymmetries(self, board: np.ndarray, pi: np.ndarray):
@@ -144,11 +132,11 @@ class OtrioGame(Game):
         pi = np.asarray(pi, dtype=np.float32)
         pi_board = pi.reshape(self.SIZES, self.N, self.N)
         for k in range(4):
-            rb = np.rot90(board, k, axes=(1, 2))
+            rb = np.rot90(board, k, axes=(2, 3))
             rpi = np.rot90(pi_board, k, axes=(1, 2))
             sym.append((rb, rpi.flatten()))
             # mirror horizontally
-            mb = np.flip(rb, axis=2)
+            mb = np.flip(rb, axis=3)
             mpi = np.flip(rpi, axis=2)
             sym.append((mb, mpi.flatten()))
         return sym

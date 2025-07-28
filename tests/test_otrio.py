@@ -28,7 +28,7 @@ def test_get_valid_moves_after_move_becomes_zero():
 def test_get_game_ended_row_win():
     game = OtrioGame()
     board = game.getInitBoard()
-    board[0, 0] = np.array([1, 1, 1])
+    board[0, 0, 0] = np.array([1, 1, 1])
     assert game.getGameEnded(board, 1) == 1
     assert game.getGameEnded(board, -1) == -1
 
@@ -36,7 +36,7 @@ def test_get_game_ended_row_win():
 def test_get_game_ended_tower_win():
     game = OtrioGame()
     board = game.getInitBoard()
-    board[:, 0, 0] = 1
+    board[0, :, 0, 0] = 1
     assert game.getGameEnded(board, 1) == 1
     assert game.getGameEnded(board, -1) == -1
 
@@ -44,7 +44,7 @@ def test_get_game_ended_tower_win():
 def test_get_game_ended_draw():
     game = OtrioGame()
     board = game.getInitBoard()
-    board[:3] = np.array([
+    pattern = np.array([
         [[1, -1, 1],
          [1, -1, -1],
          [-1, 1, -1]],
@@ -55,5 +55,17 @@ def test_get_game_ended_draw():
          [1, -1, 1],
          [-1, 1, -1]]
     ], dtype=np.int8)
+    board[0] = pattern
+    board[1] = pattern
     assert game.getGameEnded(board, 1) == 1e-4
     assert game.getGameEnded(board, -1) == 1e-4
+
+
+def test_color_toggle():
+    g = OtrioGame()
+    b = g.getInitBoard(); p = 1
+    assert g.next_color[0] == 0
+    b, _ = g.getNextState(b, p, 0)
+    assert g.next_color[0] == 1
+    b, _ = g.getNextState(b, -p, 9)
+    assert g.next_color[1] == 1
