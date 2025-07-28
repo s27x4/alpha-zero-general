@@ -6,6 +6,13 @@ def action_idx(size, row, col):
     return size * 9 + row * 3 + col
 
 
+def test_reserve_decrements():
+    g = OtrioGame()
+    b = g.getInitBoard()
+    b2, _ = g.getNextState(b, 1, 0)
+    assert b2[0, g.SIZES, 0, 0] == g.PIECES_PER_SIZE - 1
+
+
 def test_get_valid_moves_initial_all_ones():
     game = OtrioGame()
     board = game.getInitBoard()
@@ -54,7 +61,18 @@ def test_get_game_ended_draw():
          [1, -1, 1],
          [-1, 1, -1]]
     ], dtype=np.int8)
-    board[0] = pattern
-    board[1] = pattern
+    board[0, :game.SIZES] = pattern
+    board[1, :game.SIZES] = pattern
     assert game.getGameEnded(board, 1) == 1e-4
     assert game.getGameEnded(board, -1) == 1e-4
+
+
+def test_draw_by_reserve_exhaustion():
+    g = OtrioGame()
+    b = g.getInitBoard()
+    p = 1
+    total = g.PIECES_PER_SIZE * g.SIZES * g.COLORS * g.n_players
+    for _ in range(total):
+        a = np.where(g.getValidMoves(b, p) == 1)[0][0]
+        b, p = g.getNextState(b, p, a)
+    assert g.getGameEnded(b, p) == 1e-4

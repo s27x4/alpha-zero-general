@@ -4,6 +4,12 @@ sys.path.append('..')
 from Game import Game
 import numpy as np
 
+
+def reserves_left(board: np.ndarray) -> int:
+    """総残数を取得するヘルパー"""
+    offset = OtrioGame.RESERVE_OFFSET
+    return int(board[:, offset:, 0, 0].sum())
+
 class OtrioGame(Game):
     """
     Alpha‑Zero ‘Game’ adapter for **Otrio**.
@@ -24,6 +30,7 @@ class OtrioGame(Game):
     SIZES = 3
     N = 3  # board is 3×3 pegs
     PIECES_PER_SIZE = 3
+    RESERVE_OFFSET = SIZES
 
     def __init__(self, n_players: int = 2):
         self.n_players = n_players
@@ -34,23 +41,20 @@ class OtrioGame(Game):
             else [[i] for i in range(n_players)]
         )
         self.next_color = np.zeros(n_players, np.int8)
-        self.reserves = np.full(
-            (n_players, self.COLORS, self.SIZES),
-            self.PIECES_PER_SIZE,
-            np.int8,
-        )
         self.action_size = self.SIZES * self.N * self.N  # 27
 
     # ══════════════ Alpha‑Zero required API ══════════════
     def getInitBoard(self):
         """空の盤面を生成し、色とリザーブを初期化する。"""
-        board = np.zeros((self.COLORS, self.SIZES, self.N, self.N), dtype=np.int8)
+        board = np.zeros((self.COLORS, self.SIZES * 2, self.N, self.N), dtype=np.int8)
         self.next_color[:] = 0
-        self.reserves[:] = self.PIECES_PER_SIZE
+        for c in range(self.COLORS):
+            for s in range(self.SIZES):
+                board[c, self.RESERVE_OFFSET + s, 0, 0] = self.PIECES_PER_SIZE
         return board
 
     def getBoardSize(self):
-        return (self.COLORS, self.SIZES, self.N, self.N)
+        return (self.COLORS, self.SIZES * 2, self.N, self.N)
 
     def getActionSize(self):
         return self.action_size
@@ -75,10 +79,10 @@ class OtrioGame(Game):
         color = colors[c_idx]
 
         assert b[color, size, row, col] == 0, "Illegal move!"
-        assert self.reserves[idx, color, size] > 0, "No pieces left!"
+        assert b[color, self.RESERVE_OFFSET + size, 0, 0] > 0, "No pieces left!"
 
         b[color, size, row, col] = player
-        self.reserves[idx, color, size] -= 1
+        b[color, self.RESERVE_OFFSET + size, 0, 0] -= 1
         if self.n_players == 2:
             self.next_color[idx] ^= 1
 
@@ -101,7 +105,7 @@ class OtrioGame(Game):
 
         mask = np.zeros(self.action_size, np.int8)
         for size in range(self.SIZES):
-            if self.reserves[idx, color, size] == 0:
+            if board[color, self.RESERVE_OFFSET + size, 0, 0] == 0:
                 continue
             plane = board[color, size]
             mask[size*9:(size+1)*9] = (plane.reshape(-1) == 0)
@@ -110,6 +114,9 @@ class OtrioGame(Game):
 
     def getGameEnded(self, board: np.ndarray, player: int):
         """0 = ongoing, 1 = win for *player*, -1 = loss, 1e‑4 = draw."""
+        if reserves_left(board) == 0:
+            return 1e-4
+
         def _has_line(p):
             for c in range(self.COLORS):
                 for size in range(self.SIZES):
