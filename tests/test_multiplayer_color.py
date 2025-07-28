@@ -10,7 +10,7 @@ def test_three_player_fixed_colors():
     p = 1
     a = np.where(g.getValidMoves(b, p))[0][0]
     b, p = g.getNextState(b, p, a)
-    assert g.next_color[0] == 0  # 変化しない
+    assert g.get_current_color(b, 1) == 0  # 変化しない
 
 
 def test_four_player_fixed_colors():
@@ -21,4 +21,4 @@ def test_four_player_fixed_colors():
     p = 1
     a = np.where(g.getValidMoves(b, p))[0][0]
     b, p = g.getNextState(b, p, a)
-    assert g.next_color[0] == 0
+    assert g.get_current_color(b, 1) == 0

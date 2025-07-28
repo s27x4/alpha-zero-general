@@ -40,14 +40,12 @@ class OtrioGame(Game):
             if n_players == 2
             else [[i] for i in range(n_players)]
         )
-        self.next_color = np.zeros(n_players, np.int8)
         self.action_size = self.SIZES * self.N * self.N  # 27
 
     # ══════════════ Alpha‑Zero required API ══════════════
     def getInitBoard(self):
         """空の盤面を生成し、色とリザーブを初期化する。"""
         board = np.zeros((self.COLORS, self.SIZES * 2, self.N, self.N), dtype=np.int8)
-        self.next_color[:] = 0
         for c in range(self.COLORS):
             for s in range(self.SIZES):
                 board[c, self.RESERVE_OFFSET + s, 0, 0] = self.PIECES_PER_SIZE
@@ -58,6 +56,17 @@ class OtrioGame(Game):
 
     def getActionSize(self):
         return self.action_size
+
+    def get_current_color(self, board: np.ndarray, player: int) -> int:
+        """Return the color index to use for the given player."""
+        idx = 0 if self.n_players == 2 and player == 1 else (
+            1 if self.n_players == 2 else player - 1
+        )
+        colors = self.player_colors[idx]
+        if len(colors) == 1:
+            return colors[0]
+        counts = [np.count_nonzero(board[c, :self.SIZES]) for c in colors]
+        return colors[sum(counts) % len(colors)]
 
     def getNextState(self, board: np.ndarray, player: int, action: int):
         """Execute `action` and switch to next player.
@@ -73,20 +82,13 @@ class OtrioGame(Game):
         size, rem = divmod(action, 9)
         row, col = divmod(rem, 3)
 
-        idx = 0 if self.n_players == 2 and player == 1 else (
-            1 if self.n_players == 2 else player - 1
-        )
-        colors = self.player_colors[idx]
-        c_idx = self.next_color[idx] if self.n_players == 2 else 0
-        color = colors[c_idx]
+        color = self.get_current_color(b, player)
 
         assert b[color, size, row, col] == 0, "Illegal move!"
         assert b[color, self.RESERVE_OFFSET + size, 0, 0] > 0, "No pieces left!"
 
         b[color, size, row, col] = player
         b[color, self.RESERVE_OFFSET + size, 0, 0] -= 1
-        if self.n_players == 2:
-            self.next_color[idx] ^= 1
 
         if self.n_players == 2:
             next_player = -player
@@ -100,12 +102,7 @@ class OtrioGame(Game):
         Returns:
             mask (np.ndarray[int8]): shape (27,), 1 = legal
         """
-        idx = 0 if self.n_players == 2 and player == 1 else (
-            1 if self.n_players == 2 else player - 1
-        )
-        colors = self.player_colors[idx]
-        c_idx = self.next_color[idx] if self.n_players == 2 else 0
-        color = colors[c_idx]
+        color = self.get_current_color(board, player)
 
         mask = np.zeros(self.action_size, np.int8)
         for size in range(self.SIZES):
