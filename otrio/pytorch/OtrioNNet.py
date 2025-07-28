@@ -6,11 +6,14 @@ class OtrioNNet(nn.Module):
     def __init__(self, game, args):
         super().__init__()
         self.args = args
-        self.c, self.board_x, self.board_y = game.getBoardSize()
+        # board shape: (colors, piece/reserve, rows, cols)
+        self.c, self.extra_dim, self.board_x, self.board_y = game.getBoardSize()
+        self.input_channels = self.c * self.extra_dim
         self.action_size = game.getActionSize()
 
         # 入力チャネル数はゲーム側のボードサイズに合わせる
-        self.conv1 = nn.Conv2d(self.c, self.args.num_channels, 3, padding=1)
+        # in_channels は色数 × サイズ層数に拡張
+        self.conv1 = nn.Conv2d(self.input_channels, self.args.num_channels, 3, padding=1)
         self.conv2 = nn.Conv2d(self.args.num_channels, self.args.num_channels, 3, padding=1)
         self.conv3 = nn.Conv2d(self.args.num_channels, self.args.num_channels, 3, padding=1)
         self.conv4 = nn.Conv2d(self.args.num_channels, self.args.num_channels, 3, padding=1)
@@ -31,7 +34,8 @@ class OtrioNNet(nn.Module):
         self.fc4 = nn.Linear(512, 1)
 
     def forward(self, s):
-        # s shape: (batch, c, 3, 3)
+        # s shape: (batch, c, extra_dim, board_x, board_y)
+        s = s.view(-1, self.input_channels, self.board_x, self.board_y)
         s = F.relu(self.bn1(self.conv1(s)))
         s = F.relu(self.bn2(self.conv2(s)))
         s = F.relu(self.bn3(self.conv3(s)))
