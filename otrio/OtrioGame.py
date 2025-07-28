@@ -63,9 +63,19 @@ class OtrioGame(Game):
             next_player = (player % self.n_players) + 1
         return b, next_player
 
-    def getValidMoves(self, board: np.ndarray, player: int):
-        """Binary mask of length 27 (1 = legal)."""
-        return (board.reshape(-1) == 0).astype(np.int8)
+    def getValidMoves(self, board: np.ndarray, player: int) -> np.ndarray:
+        """
+        Returns:
+            mask (np.ndarray[int8]): shape (27,), 1 = legal
+        """
+        mask = (board.reshape(-1) == 0).astype(np.int8)
+
+        # 各サイズの残り駒が０ならそのレイヤすべて無効
+        for size in range(self.SIZES):
+            if pieces_left[player][size] == 0:
+                mask[size*9:(size+1)*9] = 0
+
+        return mask
 
     def getGameEnded(self, board: np.ndarray, player: int):
         """0 = ongoing, 1 = win for *player*, -1 = loss, 1e‑4 = draw."""

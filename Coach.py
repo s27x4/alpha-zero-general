@@ -157,3 +157,24 @@ class Coach():
 
             # examples based on the model were already collected (loaded)
             self.skipFirstSelfPlay = True
+    def quick_train_eval(self, iters=3):
+        """短縮版：iters 分だけ self‑play → arena."""
+        for i in range(1, iters + 1):
+            self.nnet.save_checkpoint(self.args.checkpoint,
+                                        f'optuna_tmp{self._trial_id}.pth.tar')
+
+            # self‑play (例を貯める)
+            iterationTrainExamples = []
+            for _ in range(self.args.numEps):
+                iterationTrainExamples += self.executeEpisode()
+            self.trainExamplesHistory.append(iterationTrainExamples)
+            self.nnet.train(iterationTrainExamples)
+
+        # Arena で旧ネットと対戦して勝率を返す
+        pwins, nwins, draws = Arena(
+            lambda x: np.argmax(self.nnet.predict(x)[0]),
+            lambda x: np.argmax(self.pnet.predict(x)[0]),
+            self.game
+        ).playGames(self.args.arenaCompare)
+        win_rate = pwins / (pwins + nwins + draws)
+        return win_rate
