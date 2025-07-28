@@ -25,7 +25,9 @@ class NNetWrapper:
         self.nnet = OtrioNNet(game, self.args)
         if self.args.cuda:
             self.nnet.cuda()
-        self.writer = SummaryWriter(log_dir='logs/otrio-ai')  # 好きなパス名でOK
+        log_dir = getattr(self.args, 'tb_log_dir', 'logs/otrio-ai')
+        os.makedirs(log_dir, exist_ok=True)
+        self.writer = SummaryWriter(log_dir=log_dir)
 
     # train/predict/save/load は元の Wrapper をコピペ or インポート
     def train(self, examples):
@@ -74,6 +76,7 @@ class NNetWrapper:
                 self.writer.add_scalar('loss/value',  l_v.item(), global_step)
                 global_step += 1
         self.writer.flush()
+        self.writer.close()
 
     def predict(self, board):
         """

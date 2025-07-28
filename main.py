@@ -34,6 +34,9 @@ args = dotdict({
     'batch_size': 64,
     'epochs': 10,
 
+    # TensorBoard ログ出力先
+    'tb_log_dir': 'logs/otrio-ai',
+
     # ── I/O ────────────────────────────────
     'checkpoint': './temp/',
     'load_model': True,
