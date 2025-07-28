@@ -145,6 +145,9 @@ class OtrioGame(Game):
         b = board.copy()
         # 盤面部分のみを反転し、リザーブ情報は変更しない
         b[:, :self.SIZES] *= player
+        if player != 1:
+            shift = -2 if self.n_players == 2 else -(player - 1)
+            b = np.roll(b, shift, axis=0)
         return b
 
     def getSymmetries(self, board: np.ndarray, pi: np.ndarray):
