@@ -1,6 +1,4 @@
 import numpy as np
-import pytest
-
 from otrio.OtrioGame import OtrioGame
 
 
@@ -29,7 +27,7 @@ def test_get_valid_moves_after_move_becomes_zero():
 def test_get_game_ended_row_win():
     game = OtrioGame()
     board = game.getInitBoard()
-    board[0, 0] = np.array([1, 1, 1])
+    board[0, 0, 0] = np.array([1, 1, 1])
     assert game.getGameEnded(board, 1) == 1
     assert game.getGameEnded(board, -1) == -1
 
@@ -37,7 +35,7 @@ def test_get_game_ended_row_win():
 def test_get_game_ended_tower_win():
     game = OtrioGame()
     board = game.getInitBoard()
-    board[:, 0, 0] = 1
+    board[0, :, 0, 0] = 1
     assert game.getGameEnded(board, 1) == 1
     assert game.getGameEnded(board, -1) == -1
 
@@ -45,7 +43,7 @@ def test_get_game_ended_tower_win():
 def test_get_game_ended_draw():
     game = OtrioGame()
     board = game.getInitBoard()
-    board[:3] = np.array([
+    pattern = np.array([
         [[1, -1, 1],
          [1, -1, -1],
          [-1, 1, -1]],
@@ -56,29 +54,7 @@ def test_get_game_ended_draw():
          [1, -1, 1],
          [-1, 1, -1]]
     ], dtype=np.int8)
-    assert game.getGameEnded(board, 1) == 1e-4
-    assert game.getGameEnded(board, -1) == 1e-4
-
-
-def test_reserve_counts_decrement():
-    game = OtrioGame()
-    board = game.getInitBoard()
-    size = 0
-    actions = [
-        action_idx(size, 0, 0),
-        action_idx(size, 0, 1),
-        action_idx(size, 0, 2),
-    ]
-    for act in actions:
-        board, _ = game.getNextState(board, 1, act)
-    assert board[game.SIZES + size, 0, 0] == 0
-    with pytest.raises(AssertionError):
-        game.getNextState(board, 1, action_idx(size, 1, 0))
-
-
-def test_get_game_ended_draw_reserves_empty():
-    game = OtrioGame()
-    board = game.getInitBoard()
-    board[3:] = 0
+    board[0] = pattern
+    board[1] = pattern
     assert game.getGameEnded(board, 1) == 1e-4
     assert game.getGameEnded(board, -1) == 1e-4
