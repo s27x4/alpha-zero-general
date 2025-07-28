@@ -74,3 +74,11 @@ def test_reserve_counts_decrement():
     assert board[game.SIZES + size, 0, 0] == 0
     with pytest.raises(AssertionError):
         game.getNextState(board, 1, action_idx(size, 1, 0))
+
+
+def test_get_game_ended_draw_reserves_empty():
+    game = OtrioGame()
+    board = game.getInitBoard()
+    board[3:] = 0
+    assert game.getGameEnded(board, 1) == 1e-4
+    assert game.getGameEnded(board, -1) == 1e-4

@@ -123,6 +123,14 @@ class OtrioGame(Game):
             return 1
         if _has_line(-player):
             return -1
+
+        # 両者のリザーブが無くなったら引き分け
+        if self.n_players == 2:
+            p1_reserve = board[self.SIZES:self.SIZES*2]
+            p2_reserve = board[self.SIZES*2:]
+            if not p1_reserve.any() and not p2_reserve.any():
+                return 1e-4
+
         if not (board[:self.SIZES] == 0).any():
             return 1e-4  # draw
         return 0
