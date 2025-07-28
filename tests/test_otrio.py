@@ -57,3 +57,11 @@ def test_get_game_ended_draw():
     ], dtype=np.int8)
     assert game.getGameEnded(board, 1) == 1e-4
     assert game.getGameEnded(board, -1) == 1e-4
+
+
+def test_get_game_ended_draw_reserves_empty():
+    game = OtrioGame()
+    board = game.getInitBoard()
+    board[3:] = 0
+    assert game.getGameEnded(board, 1) == 1e-4
+    assert game.getGameEnded(board, -1) == 1e-4
