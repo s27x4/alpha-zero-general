@@ -29,7 +29,7 @@ def test_get_valid_moves_after_move_becomes_zero():
 def test_get_game_ended_row_win():
     game = OtrioGame()
     board = game.getInitBoard()
-    board[0, 0] = np.array([1, 1, 1])
+    board[0, 0, 0] = np.array([1, 1, 1])
     assert game.getGameEnded(board, 1) == 1
     assert game.getGameEnded(board, -1) == -1
 
@@ -37,7 +37,7 @@ def test_get_game_ended_row_win():
 def test_get_game_ended_tower_win():
     game = OtrioGame()
     board = game.getInitBoard()
-    board[:, 0, 0] = 1
+    board[0, :, 0, 0] = 1
     assert game.getGameEnded(board, 1) == 1
     assert game.getGameEnded(board, -1) == -1
 
@@ -45,7 +45,7 @@ def test_get_game_ended_tower_win():
 def test_get_game_ended_draw():
     game = OtrioGame()
     board = game.getInitBoard()
-    board[:3] = np.array([
+    board[0] = np.array([
         [[1, -1, 1],
          [1, -1, -1],
          [-1, 1, -1]],
@@ -71,7 +71,7 @@ def test_reserve_counts_decrement():
     ]
     for act in actions:
         board, _ = game.getNextState(board, 1, act)
-    assert board[game.SIZES + size, 0, 0] == 0
+    assert game.reserves[0, 0, size] == 0
     with pytest.raises(AssertionError):
         game.getNextState(board, 1, action_idx(size, 1, 0))
 
@@ -79,6 +79,16 @@ def test_reserve_counts_decrement():
 def test_get_game_ended_draw_reserves_empty():
     game = OtrioGame()
     board = game.getInitBoard()
-    board[3:] = 0
+    game.reserves[:] = 0
     assert game.getGameEnded(board, 1) == 1e-4
     assert game.getGameEnded(board, -1) == 1e-4
+
+
+def test_color_toggle():
+    g = OtrioGame()
+    b = g.getInitBoard(); p = 1
+    assert g.next_color[0] == 0
+    b, _ = g.getNextState(b, p, 0)
+    assert g.next_color[0] == 1
+    b, _ = g.getNextState(b, -p, 9)
+    assert g.next_color[1] == 1
