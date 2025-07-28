@@ -1,6 +1,10 @@
+from __future__ import print_function
+import sys
+sys.path.append('..')
+from Game import Game
 import numpy as np
 
-class OtrioGame:
+class OtrioGame(Game):
     """
     Alpha‑Zero ‘Game’ adapter for **Otrio**.
 
