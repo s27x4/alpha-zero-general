@@ -157,6 +157,17 @@ class Coach():
 
             # examples based on the model were already collected (loaded)
             self.skipFirstSelfPlay = True
+
+    def _choose_valid_action(self, board, net):
+        pi, _ = net.predict(board)
+        valids = self.game.getValidMoves(board, 1)
+        pi *= valids
+        if pi.sum() == 0:
+            pi = valids / valids.sum()
+        else:
+            pi /= pi.sum()
+        return int(np.argmax(pi))
+
     def quick_train_eval(self, iters=3):
         """短縮版：iters 分だけ self‑play → arena."""
         for i in range(1, iters + 1):
@@ -171,10 +182,11 @@ class Coach():
             self.nnet.train(iterationTrainExamples)
 
         # Arena で旧ネットと対戦して勝率を返す
-        pwins, nwins, draws = Arena(
-            lambda x: np.argmax(self.nnet.predict(x)[0]),
-            lambda x: np.argmax(self.pnet.predict(x)[0]),
+        arena = Arena(
+            lambda x: self._choose_valid_action(x, self.nnet),
+            lambda x: self._choose_valid_action(x, self.pnet),
             self.game
-        ).playGames(self.args.arenaCompare)
+        )
+        pwins, nwins, draws = arena.playGames(self.args.arenaCompare)
         win_rate = pwins / (pwins + nwins + draws)
         return win_rate
