@@ -8,7 +8,7 @@ from tqdm import tqdm
 sys.path.append('../../')
 from utils import *
 from NeuralNet import NeuralNet
-
+import pickle
 import torch
 import torch.optim as optim
 from .OtrioNNet import OtrioNNet
@@ -110,8 +110,6 @@ class NNetWrapper:
         torch.save({
             'state_dict': self.nnet.state_dict(),
         }, filepath)
-        with open(f"{filepath}.examples", "wb") as f:
-            pickle.dump(self.examplesBuffer, f)
 
     def load_checkpoint(self, folder='checkpoint', filename='checkpoint.pth.tar'):
         # https://github.com/pytorch/examples/blob/master/imagenet/main.py#L98
@@ -119,6 +117,6 @@ class NNetWrapper:
         if not os.path.exists(filepath):
             raise ("No model in path {}".format(filepath))
         map_location = None if self.args.cuda else 'cpu'
-        checkpoint = torch.load(filepath, map_location=map_location)
+        checkpoint = torch.load(filepath, map_location=map_location, weights_only=True)
         self.nnet.load_state_dict(checkpoint['state_dict'])
 
