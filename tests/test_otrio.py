@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from otrio.OtrioGame import OtrioGame
 
@@ -57,3 +58,19 @@ def test_get_game_ended_draw():
     ], dtype=np.int8)
     assert game.getGameEnded(board, 1) == 1e-4
     assert game.getGameEnded(board, -1) == 1e-4
+
+
+def test_reserve_counts_decrement():
+    game = OtrioGame()
+    board = game.getInitBoard()
+    size = 0
+    actions = [
+        action_idx(size, 0, 0),
+        action_idx(size, 0, 1),
+        action_idx(size, 0, 2),
+    ]
+    for act in actions:
+        board, _ = game.getNextState(board, 1, act)
+    assert board[game.SIZES + size, 0, 0] == 0
+    with pytest.raises(AssertionError):
+        game.getNextState(board, 1, action_idx(size, 1, 0))

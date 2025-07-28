@@ -31,13 +31,17 @@ class OtrioGame(Game):
 
     # ══════════════ Alpha‑Zero required API ══════════════
     def getInitBoard(self):
-        """Zero‑filled board with piece reserves."""
+        """Zero‑filled board with piece reserves.
+
+        Reserves are stored in the ``(0, 0)`` cell of each reserve layer.
+        """
         channels = self.SIZES + self.n_players * self.SIZES
         board = np.zeros((channels, self.N, self.N), dtype=np.int8)
         for p in range(self.n_players):
             offset = self.SIZES + p * self.SIZES
             for s in range(self.SIZES):
-                board[offset + s, :, :] = self.PIECES_PER_SIZE
+                # Reserve count stored in a single cell
+                board[offset + s, 0, 0] = self.PIECES_PER_SIZE
         return board
 
     def getBoardSize(self):
@@ -68,7 +72,8 @@ class OtrioGame(Game):
             offset = self.SIZES * 2
         reserve_layer = offset + size
         assert b[reserve_layer, 0, 0] > 0, "No pieces left!"
-        b[reserve_layer, :, :] -= 1
+        b[reserve_layer, 0, 0] -= 1
+        assert b[reserve_layer, 0, 0] >= 0, "Negative reserve count!"
 
         b[size, row, col] = player
 
