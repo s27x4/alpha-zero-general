@@ -143,7 +143,8 @@ class OtrioGame(Game):
 
     def getCanonicalForm(self, board: np.ndarray, player: int):
         b = board.copy()
-        b *= player
+        # 盤面部分のみを反転し、リザーブ情報は変更しない
+        b[:, :self.SIZES] *= player
         return b
 
     def getSymmetries(self, board: np.ndarray, pi: np.ndarray):
