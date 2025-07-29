@@ -1,5 +1,5 @@
 import logging
-
+import numpy as np
 from tqdm import tqdm
 
 log = logging.getLogger(__name__)
@@ -57,6 +57,11 @@ class Arena():
             valids = self.game.getValidMoves(self.game.getCanonicalForm(board, curPlayer), 1)
 
             if valids[action] == 0:
+                print("=== DEBUG ===")
+                print(f"picked action: {action}")
+                print(f"valid moves idx: {np.where(valids > 0)[0]}")
+                print(board)                           # 盤表示用 util があれば
+                raise AssertionError(f"Action {action} is not valid!")
                 log.error(f'Action {action} is not valid!')
                 log.debug(f'valids = {valids}')
                 assert valids[action] > 0
