@@ -57,14 +57,21 @@ class OtrioGame(Game):
     def getActionSize(self):
         return self.action_size
 
-    def get_current_color(self, board: np.ndarray, player: int) -> int:
-        """Return the color index to use for the given player."""
+    def get_current_color(self, board: np.ndarray, player: int, *, canonical: bool = False) -> int:
+        """指定プレイヤーが現在使うべき色インデックスを返す。"""
         idx = 0 if self.n_players == 2 and player == 1 else (
             1 if self.n_players == 2 else player - 1
         )
         colors = self.player_colors[idx]
+
+        # 正規化盤面では色レイヤーが回転しているため、プレイヤーが -1 のとき
+        # インデックスを補正する
+        if canonical and self.n_players == 2 and player == -1:
+            colors = [(c - 2) % self.COLORS for c in colors]
+
         if len(colors) == 1:
             return colors[0]
+
         counts = [np.count_nonzero(board[c, :self.SIZES]) for c in colors]
         return colors[sum(counts) % len(colors)]
 
