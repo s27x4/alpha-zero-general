@@ -21,6 +21,14 @@ to set up a (default: pyTorch) Jupyter docker container. We can now open a new t
 docker exec -ti pytorch_notebook python main.py
 ```
 
+### Conda 環境
+Python 3.11 を利用した conda 環境 `otrio` 用の `otrio_env.yaml` を追加しました。
+次のコマンドで環境を構築できます。
+```bash
+conda env create -f otrio_env.yaml
+```
+詳しい使い方や学習手順については [otrio/README.md](otrio/README.md) も参照してください。
+
 ### Experiments
 We trained a PyTorch model for 6x6 Othello (~80 iterations, 100 episodes per iteration and 25 MCTS simulations per turn). This took about 3 days on an NVIDIA Tesla K80. The pretrained model (PyTorch) can be found in ```pretrained_models/othello/pytorch/```. You can play a game against it using ```pit.py```. Below is the performance of the model against a random and a greedy baseline with the number of iterations.
 ![alt tag](https://github.com/suragnair/alpha-zero-general/raw/master/pretrained_models/6x6.png)

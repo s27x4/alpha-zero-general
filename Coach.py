@@ -23,7 +23,7 @@ class Coach():
     def __init__(self, game, nnet, args):
         self.game = game
         self.nnet = nnet
-        self.pnet = self.nnet.__class__(self.game)  # the competitor network
+        self.pnet = self.nnet.__class__(self.game, args)  # the competitor network
         self.args = args
         self.mcts = MCTS(self.game, self.nnet, self.args)
         self.trainExamplesHistory = []  # history of examples from args.numItersForTrainExamplesHistory latest iterations
@@ -126,6 +126,8 @@ class Coach():
                 log.info('ACCEPTING NEW MODEL')
                 self.nnet.save_checkpoint(folder=self.args.checkpoint, filename=self.getCheckpointFile(i))
                 self.nnet.save_checkpoint(folder=self.args.checkpoint, filename='best.pth.tar')
+                self.nnet.save_checkpoint(self.args.checkpoint, f'checkpoint_iter{i}.pth.tar')
+                self.saveTrainExamples(i)
 
     def getCheckpointFile(self, iteration):
         return 'checkpoint_' + str(iteration) + '.pth.tar'
@@ -155,3 +157,36 @@ class Coach():
 
             # examples based on the model were already collected (loaded)
             self.skipFirstSelfPlay = True
+
+    def _choose_valid_action(self, board, net):
+        pi, _ = net.predict(board)
+        valids = self.game.getValidMoves(board, 1)
+        pi *= valids
+        if pi.sum() == 0:
+            pi = valids / valids.sum()
+        else:
+            pi /= pi.sum()
+        return int(np.argmax(pi))
+
+    def quick_train_eval(self, iters=3):
+        """短縮版：iters 分だけ self‑play → arena."""
+        for i in range(1, iters + 1):
+            self.nnet.save_checkpoint(self.args.checkpoint,
+                                        f'optuna_tmp{self._trial_id}.pth.tar')
+
+            # self‑play (例を貯める)
+            iterationTrainExamples = []
+            for _ in range(self.args.numEps):
+                iterationTrainExamples += self.executeEpisode()
+            self.trainExamplesHistory.append(iterationTrainExamples)
+            self.nnet.train(iterationTrainExamples)
+
+        # Arena で旧ネットと対戦して勝率を返す
+        arena = Arena(
+            lambda x: self._choose_valid_action(x, self.nnet),
+            lambda x: self._choose_valid_action(x, self.pnet),
+            self.game
+        )
+        pwins, nwins, draws = arena.playGames(self.args.arenaCompare)
+        win_rate = pwins / (pwins + nwins + draws)
+        return win_rate
