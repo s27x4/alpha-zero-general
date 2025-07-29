@@ -1,0 +1,40 @@
+# ファイル名: ml310-gpu.yml
+name: ml310-gpu
+channels:
+  - pytorch           # 公式
+  - nvidia            # CUDA DLL 同梱
+  - conda-forge       # その他
+dependencies:
+  # ―――Python―――
+  - python=3.10
+  # ―――PyTorch (CUDA 11.8)―――
+  - pytorch=2.5.*          # バージョン固定で安心
+  - torchvision            # 画像系
+  - torchaudio             # 音声系
+  - pytorch-cuda=11.8      # GPU DLL 一式  :contentReference[oaicite:0]{index=0}
+  # ―――Jupyter & 可視化―――
+  - jupyterlab
+  - ipywidgets
+  - matplotlib
+  - seaborn
+  - tensorboard
+  # ―――汎用 ML / データ処理―――
+  - scikit-learn
+  - xgboost
+  - lightgbm
+  - pandas
+  - numpy
+  - scipy
+  # ―――最適化 / 強化学習―――
+  - optuna
+  - gymnasium
+  # ―――NLP / CV―――
+  - transformers
+  - sentencepiece
+  - datasets
+  - pillow
+  - opencv
+  # ―――その他―――
+  - tqdm
+  - ipython
+  - pip                   # pip 追加で何でも後乗せ可

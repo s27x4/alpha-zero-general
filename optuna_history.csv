@@ -1,0 +1,2 @@
+number,value,datetime_start,datetime_complete,duration,params_channels,params_cpuct,params_lr,params_sims,state
+0,-1.0,2025-07-29 19:09:30.132017,2025-07-29 20:12:37.680425,0 days 01:03:07.548408,192,2.2105947905252687,0.0006583676768057318,200,COMPLETE
