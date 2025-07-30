@@ -1,22 +1,26 @@
-# Alpha Zero General (any game, any framework!)
-A simplified, highly flexible, commented and (hopefully) easy to understand implementation of self-play based reinforcement learning based on the AlphaGo Zero paper (Silver et al). It is designed to be easy to adopt for any two-player turn-based adversarial game and any deep learning framework of your choice. A sample implementation has been provided for the game of Othello in PyTorch and Keras. An accompanying tutorial can be found [here](https://suragnair.github.io/posts/alphazero.html). We also have implementations for many other games like GoBang and TicTacToe.
+# AlphaZero Otrio 版
 
-To use a game of your choice, subclass the classes in ```Game.py``` and ```NeuralNet.py``` and implement their functions. Example implementations for Othello can be found in ```othello/OthelloGame.py``` and ```othello/{pytorch,keras}/NNet.py```. 
+このリポジトリは [suragnair/alpha-zero-general](https://github.com/suragnair/alpha-zero-general) をフォークし、ボードゲーム **Otrio** を学習対象にするための実装を追加したものです。自己対戦型強化学習により Otrio のプレイヤーを訓練できます。Otrio 用のゲームロジックやニューラルネットワークのコードは `otrio/` ディレクトリに配置されています。
 
-```Coach.py``` contains the core training loop and ```MCTS.py``` performs the Monte Carlo Tree Search. The parameters for the self-play can be specified in ```main.py```. Additional neural network parameters are in ```othello/{pytorch,keras}/NNet.py``` (cuda flag, batch size, epochs, learning rate etc.). 
+基本的な構成はオリジナルと同様で、`Game.py` と `NeuralNet.py` を継承することで他のゲームにも対応可能です。詳細な設定や学習手順は [otrio/README.md](otrio/README.md) を参照してください。
 
-To start training a model for Othello:
+## 使い方
+
+`main.py` を実行すると Otrio の学習が始まります。
+
 ```bash
 python main.py
 ```
-Choose your framework and game in ```main.py```.
 
-### Docker Installation
-For easy environment setup, we can use [nvidia-docker](https://github.com/NVIDIA/nvidia-docker). Once you have nvidia-docker set up, we can then simply run:
+各種パラメータは `main.py` 内の `args` 辞書で設定できます。
+
+### Docker を利用した環境構築
+NVIDIA GPU を使用する場合は [nvidia-docker](https://github.com/NVIDIA/nvidia-docker) を利用すると簡単に環境を構築できます。
+以下のスクリプトを実行すると Jupyter コンテナが起動します。
 ```
 ./setup_env.sh
 ```
-to set up a (default: pyTorch) Jupyter docker container. We can now open a new terminal and enter:
+起動後、別のターミナルで次のコマンドを実行すると学習を開始できます。
 ```
 docker exec -ti pytorch_notebook python main.py
 ```
@@ -30,10 +34,10 @@ conda env create -f otrio_env.yaml
 詳しい使い方や学習手順については [otrio/README.md](otrio/README.md) も参照してください。
 
 ### Experiments
-We trained a PyTorch model for 6x6 Othello (~80 iterations, 100 episodes per iteration and 25 MCTS simulations per turn). This took about 3 days on an NVIDIA Tesla K80. The pretrained model (PyTorch) can be found in ```pretrained_models/othello/pytorch/```. You can play a game against it using ```pit.py```. Below is the performance of the model against a random and a greedy baseline with the number of iterations.
+以下はオリジナルリポジトリでの Othello 学習例です。6x6 盤で 80 イテレーション、各イテレーション 100 エピソード、1 手あたり 25 回の MCTS を実行した結果、約 3 日で学習が完了しました。学習済みモデルは ```pretrained_models/othello/pytorch/``` にあります。
 ![alt tag](https://github.com/suragnair/alpha-zero-general/raw/master/pretrained_models/6x6.png)
 
-A concise description of our algorithm can be found [here](https://github.com/suragnair/alpha-zero-general/raw/master/pretrained_models/writeup.pdf).
+アルゴリズムの概要は [こちら](https://github.com/suragnair/alpha-zero-general/raw/master/pretrained_models/writeup.pdf) を参照してください。
 
 ### Citation
 
